@@ -46,9 +46,6 @@ const nextConfig: NextConfig = {
 
   // Enable strict mode for better performance
   reactStrictMode: true,
-  
-  // Enable SWC minification
-  swcMinify: true,
 
   // Environment-specific settings
   eslint: {

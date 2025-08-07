@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -12,7 +12,11 @@ export const metadata: Metadata = {
   description: "Professional admin dashboard for SLV Barley Shop ecommerce platform - Manage products, bundles, and more",
   keywords: "ecommerce, admin, dashboard, products, bundles, management",
   authors: [{ name: "SLV Barley Shop" }],
-  viewport: "width=device-width, initial-scale=1",
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
 };
 
 export default function RootLayout({

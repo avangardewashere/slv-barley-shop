@@ -40,30 +40,37 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-teal-50">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-primary-50/30 to-secondary-50/20 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
+        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-secondary-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-accent-100 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000"></div>
+      </div>
+      
+      <div className="relative z-10 max-w-md w-full space-y-8">
         <div className="text-center">
-          <div className="w-16 h-16 bg-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-2xl font-bold text-white">SB</span>
+          <div className="w-20 h-20 bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-premium transform rotate-3 hover:rotate-0 transition-transform duration-300">
+            <span className="text-2xl font-bold text-white font-display">SB</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-emerald-900">
+          <h2 className="text-4xl font-bold text-brand-900 font-display">
             Admin Login
           </h2>
-          <p className="mt-2 text-sm text-emerald-700">
+          <p className="mt-3 text-lg text-brand-600">
             SLV Barley Shop Administration
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            <div className="bg-danger-50 border border-danger-200 text-danger-700 px-4 py-3 rounded-xl backdrop-blur-sm animate-fade-in">
               {error}
             </div>
           )}
           
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="space-y-6">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-semibold text-brand-700 mb-2">
                 Email Address
               </label>
               <input
@@ -73,16 +80,16 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 appearance-none relative block w-full px-3 py-2.5 border border-emerald-300 placeholder-emerald-400 text-emerald-900 rounded-lg focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm transition-colors"
-                placeholder="Enter your email"
+                className="input-premium w-full text-base focus:scale-105 transition-all duration-200"
+                placeholder="Enter your email address"
               />
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-semibold text-brand-700 mb-2">
                 Password
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
                 <input
                   id="password"
                   name="password"
@@ -90,18 +97,18 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  className="appearance-none relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                  className="input-premium w-full pr-12 text-base focus:scale-105 transition-all duration-200"
                   placeholder="Enter your password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-brand-400 hover:text-brand-600 transition-colors"
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-5 w-5" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-5 w-5" />
                   )}
                 </button>
               </div>
@@ -112,9 +119,14 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg"
+              className="btn-primary w-full py-4 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              <span className="relative z-10">
+                {isLoading ? 'Signing in...' : 'Sign in'}
+              </span>
+              {!isLoading && (
+                <div className="absolute inset-0 bg-gradient-to-r from-secondary-600 to-accent-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              )}
             </button>
           </div>
 
@@ -122,7 +134,7 @@ export default function LoginForm({ onSwitchToRegister }: LoginFormProps) {
             <button
               type="button"
               onClick={onSwitchToRegister}
-              className="text-sm text-emerald-600 hover:text-emerald-500 font-medium"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium hover:underline transition-all duration-200 transform hover:scale-105"
             >
               Need to register a new admin? Click here
             </button>

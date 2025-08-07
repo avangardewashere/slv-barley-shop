@@ -120,13 +120,13 @@ export default function BundleManagement() {
 
   if (isLoading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-12 bg-gray-200 rounded"></div>
-          <div className="space-y-3">
+      <div className="p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 bg-neutral-200 rounded-xl w-1/3 shimmer"></div>
+          <div className="h-16 bg-neutral-200 rounded-2xl shimmer"></div>
+          <div className="space-y-4">
             {[...Array(5)].map((_, i) => (
-              <div key={i} className="h-16 bg-gray-200 rounded"></div>
+              <div key={i} className="h-20 bg-neutral-200 rounded-xl shimmer"></div>
             ))}
           </div>
         </div>
@@ -135,36 +135,39 @@ export default function BundleManagement() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-emerald-900">Bundle Management</h1>
+    <div className="p-8">
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-brand-900 font-display mb-2">Bundle Management</h1>
+          <p className="text-lg text-brand-600">Create and manage product bundles</p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center space-x-2 px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow-lg transition-all duration-200 font-medium"
+          className="btn-primary flex items-center space-x-3 shadow-premium hover:shadow-premium-lg"
         >
-          <Plus size={20} />
-          <span>Add Bundle</span>
+          <Plus size={22} />
+          <span className="font-semibold">Add Bundle</span>
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-lg border border-teal-100 p-6 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="card-premium rounded-2xl p-8 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-teal-400" size={20} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-secondary-400" size={20} />
             <input
               type="text"
               placeholder="Search bundles..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2.5 w-full border border-teal-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+              className="input-premium pl-12 w-full"
             />
           </div>
 
           <select
             value={isActiveFilter}
             onChange={(e) => setIsActiveFilter(e.target.value)}
-            className="px-3 py-2.5 border border-teal-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+            className="input-premium"
           >
             <option value="">All Status</option>
             <option value="true">Active</option>
@@ -175,7 +178,7 @@ export default function BundleManagement() {
 
           <button
             onClick={fetchBundles}
-            className="px-4 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+            className="btn-secondary font-semibold"
           >
             Refresh
           </button>
@@ -183,65 +186,67 @@ export default function BundleManagement() {
       </div>
 
       {/* Bundles Table */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="table-premium rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-neutral-200">
+            <thead className="table-premium">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-sm font-bold text-brand-700 uppercase tracking-wider">
                   Bundle
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-sm font-bold text-brand-700 uppercase tracking-wider">
                   Items
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-sm font-bold text-brand-700 uppercase tracking-wider">
                   Pricing
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-sm font-bold text-brand-700 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-8 py-5 text-left text-sm font-bold text-brand-700 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white/90 divide-y divide-neutral-100">
               {bundles.map((bundle) => (
-                <tr key={bundle._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="h-12 w-12 flex-shrink-0">
+                <tr key={bundle._id} className="table-premium hover:scale-[1.01] transition-all duration-200">
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-16 w-16 flex-shrink-0">
                         <img
-                          className="h-12 w-12 rounded-lg object-cover"
+                          className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-2 ring-white"
                           src={bundle.images[0] || '/placeholder-image.jpg'}
                           alt={bundle.name}
                         />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
+                      <div>
+                        <div className="text-base font-bold text-brand-900">
                           {bundle.name}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-brand-600 font-medium">
                           Stock: {bundle.inventory}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div className="space-y-1">
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <div className="space-y-2">
                       {bundle.items.map((item, index) => (
-                        <div key={index} className="flex items-center text-xs">
-                          <Package size={12} className="mr-1" />
-                          {item.quantity}x {item.productId.name} ({item.variantName})
+                        <div key={index} className="flex items-center text-sm bg-gradient-to-r from-secondary-50 to-secondary-100 px-3 py-2 rounded-xl border border-secondary-200">
+                          <Package size={16} className="mr-2 text-secondary-600" />
+                          <span className="font-medium text-secondary-900">
+                            {item.quantity}x {item.productId.name} ({item.variantName})
+                          </span>
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    <div>
-                      <div className="font-medium text-green-600">₱{bundle.bundlePrice.toFixed(2)}</div>
-                      <div className="text-xs text-gray-500 line-through">₱{bundle.originalPrice.toFixed(2)}</div>
-                      <div className="text-xs text-red-600">
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <div className="space-y-1">
+                      <div className="text-xl font-bold text-success-600">₱{bundle.bundlePrice.toFixed(2)}</div>
+                      <div className="text-sm text-brand-500 line-through">₱{bundle.originalPrice.toFixed(2)}</div>
+                      <div className="text-sm font-semibold text-danger-600">
                         {bundle.discountType === 'percentage' 
                           ? `-${bundle.discount}%`
                           : `-₱${bundle.discount}`
@@ -249,48 +254,51 @@ export default function BundleManagement() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center space-x-2">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
+                      <span className={`inline-flex px-3 py-1.5 text-sm font-bold rounded-xl ${
                         bundle.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
+                          ? 'bg-success-100 text-success-800 border border-success-200'
+                          : 'bg-danger-100 text-danger-800 border border-danger-200'
                       }`}>
                         {bundle.isActive ? 'Active' : 'Inactive'}
                       </span>
                       {bundle.isFeatured && (
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        <span className="inline-flex px-3 py-1.5 text-sm font-bold rounded-xl bg-accent-100 text-accent-800 border border-accent-200">
                           Featured
                         </span>
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex items-center space-x-2">
+                  <td className="px-8 py-6 whitespace-nowrap">
+                    <div className="flex items-center space-x-3">
                       <button
                         onClick={() => handleToggleActive(bundle._id, bundle.isActive)}
-                        className={`p-1 rounded ${
+                        className={`p-2.5 rounded-xl transition-all duration-200 ${
                           bundle.isActive
-                            ? 'text-red-600 hover:text-red-900'
-                            : 'text-green-600 hover:text-green-900'
+                            ? 'text-danger-600 hover:text-danger-700 hover:bg-danger-50 border border-danger-200'
+                            : 'text-success-600 hover:text-success-700 hover:bg-success-50 border border-success-200'
                         }`}
+                        title={bundle.isActive ? 'Deactivate' : 'Activate'}
                       >
-                        {bundle.isActive ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {bundle.isActive ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                       <button
                         onClick={() => {
                           setEditingBundle(bundle);
                           setShowForm(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="p-2.5 rounded-xl text-primary-600 hover:text-primary-700 hover:bg-primary-50 border border-primary-200 transition-all duration-200"
+                        title="Edit Bundle"
                       >
-                        <Edit size={16} />
+                        <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteBundle(bundle._id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="p-2.5 rounded-xl text-danger-600 hover:text-danger-700 hover:bg-danger-50 border border-danger-200 transition-all duration-200"
+                        title="Delete Bundle"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </td>

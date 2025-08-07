@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Bundle from '@/models/Bundle';
-import Product from '@/models/Product';
+import Product, { ProductType } from '@/models/Product';
 import { requireAuth } from '@/middleware/authMiddleware';
 import { VERSION_INFO } from '@/lib/version';
+
+// DEPRECATED: This endpoint is deprecated. Bundles are now products with type='bundle'
+// This endpoint provides backward compatibility during transition
 
 export const GET = async (request: NextRequest) => {
   try {
@@ -17,33 +19,49 @@ export const GET = async (request: NextRequest) => {
 
     const skip = (page - 1) * limit;
 
-    // Build filter object
-    const filter: any = {};
+    // Build filter object for bundle products
+    const filter: any = { productType: ProductType.BUNDLE };
     if (isActive !== null) filter.isActive = isActive === 'true';
     if (search) {
       filter.$text = { $search: search };
     }
 
-    const bundles = await Bundle.find(filter)
+    const bundles = await Product.find(filter)
       .populate({
-        path: 'items.productId',
-        select: 'name images category brand',
+        path: 'bundleConfig.items.productId',
+        select: 'name images category brand variants',
       })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean();
 
-    const total = await Bundle.countDocuments(filter);
+    const total = await Product.countDocuments(filter);
+
+    // Transform to match old bundle format for backward compatibility
+    const transformedBundles = bundles.map(bundle => ({
+      _id: bundle._id,
+      name: bundle.name,
+      description: bundle.description,
+      images: bundle.images,
+      items: bundle.bundleConfig?.items || [],
+      totalSavings: bundle.bundleConfig?.totalSavings || 0,
+      savingsPercentage: bundle.bundleConfig?.savingsPercentage || 0,
+      isActive: bundle.isActive,
+      createdAt: bundle.createdAt,
+      updatedAt: bundle.updatedAt
+    }));
 
     return NextResponse.json({
-      bundles,
+      bundles: transformedBundles,
       pagination: {
         page,
         limit,
         total,
         pages: Math.ceil(total / limit),
       },
+      _deprecated: true,
+      _message: 'This endpoint is deprecated. Use /api/products?productType=bundle instead',
       api: VERSION_INFO,
     });
   } catch (error) {
@@ -61,54 +79,89 @@ export const POST = requireAuth(async (request) => {
 
     const body = await request.json();
     
-    // Validate required fields
-    const requiredFields = ['name', 'description', 'images', 'items', 'originalPrice', 'discount', 'discountType'];
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { error: `${field} is required` },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Validate that all products in bundle items exist
-    const productIds = body.items.map((item: any) => item.productId);
-    const existingProducts = await Product.find({ _id: { $in: productIds } });
+    // Transform old bundle data to new product schema
+    const productData = {
+      name: body.name,
+      description: body.description,
+      shortDescription: body.shortDescription || body.description?.substring(0, 200),
+      productType: ProductType.BUNDLE,
+      category: body.category || 'Bundles',
+      brand: body.brand || 'Salveo Organics',
+      images: body.images,
+      variants: body.variants || [{
+        name: 'Default',
+        price: body.bundlePrice || body.price || 0,
+        compareAtPrice: body.originalPrice,
+        sku: body.sku || `BUNDLE-${Date.now()}`,
+        inventory: body.inventory || 999,
+        isDefault: true,
+        attributes: []
+      }],
+      bundleConfig: {
+        items: body.items?.map((item: any) => ({
+          productId: item.productId,
+          variantSku: item.variantSku || item.variantName,
+          quantity: item.quantity || 1,
+          discountPercentage: item.discountPercentage || 0
+        })) || [],
+        totalSavings: body.totalSavings || 0,
+        savingsPercentage: body.savingsPercentage || 0
+      },
+      isActive: body.isActive !== undefined ? body.isActive : true,
+      isFeatured: body.isFeatured || false
+    };
     
-    if (existingProducts.length !== productIds.length) {
-      return NextResponse.json(
-        { error: 'One or more products in bundle do not exist' },
-        { status: 400 }
-      );
-    }
-
-    // Validate variants exist in products
-    for (const item of body.items) {
-      const product = existingProducts.find(p => p._id.toString() === item.productId);
-      const variantExists = product?.variants.some((v: any) => v.name === item.variantName);
+    // Validate that all products in bundle items exist
+    if (productData.bundleConfig.items.length > 0) {
+      const productIds = productData.bundleConfig.items.map((item: any) => item.productId);
+      const existingProducts = await Product.find({ _id: { $in: productIds } });
       
-      if (!variantExists) {
+      if (existingProducts.length !== productIds.length) {
         return NextResponse.json(
-          { error: `Variant '${item.variantName}' does not exist in product '${product?.name}'` },
+          { error: 'One or more products in bundle do not exist' },
           { status: 400 }
         );
       }
     }
+    
+    // Calculate price range
+    if (productData.variants.length > 0) {
+      const prices = productData.variants.map(v => v.price);
+      productData.basePriceRange = {
+        min: Math.min(...prices),
+        max: Math.max(...prices)
+      };
+    }
 
-    const bundle = new Bundle(body);
-    await bundle.save();
+    const product = new Product(productData);
+    await product.save();
 
-    // Populate the bundle with product details
-    const populatedBundle = await Bundle.findById(bundle._id)
+    // Populate bundle items
+    const populatedProduct = await Product.findById(product._id)
       .populate({
-        path: 'items.productId',
-        select: 'name images category brand',
+        path: 'bundleConfig.items.productId',
+        select: 'name images category brand variants',
       });
 
+    // Transform back to bundle format for backward compatibility
+    const bundleResponse = {
+      _id: populatedProduct._id,
+      name: populatedProduct.name,
+      description: populatedProduct.description,
+      images: populatedProduct.images,
+      items: populatedProduct.bundleConfig?.items || [],
+      totalSavings: populatedProduct.bundleConfig?.totalSavings || 0,
+      savingsPercentage: populatedProduct.bundleConfig?.savingsPercentage || 0,
+      isActive: populatedProduct.isActive,
+      createdAt: populatedProduct.createdAt,
+      updatedAt: populatedProduct.updatedAt
+    };
+
     return NextResponse.json({
-      message: 'Bundle created successfully',
-      bundle: populatedBundle,
+      message: 'Bundle created successfully (migrated to product)',
+      bundle: bundleResponse,
+      _deprecated: true,
+      _message: 'Bundle created as product with type=bundle. Use /api/products for future operations',
       api: VERSION_INFO,
     }, { status: 201 });
   } catch (error: any) {

@@ -138,6 +138,7 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
         { name: 'brand', type: 'string', required: false, description: 'Filter by brand', location: 'query' },
         { name: 'search', type: 'string', required: false, description: 'Search in product names and descriptions', location: 'query' },
         { name: 'isActive', type: 'boolean', required: false, description: 'Filter by active status', location: 'query' },
+        { name: 'productType', type: 'string', required: false, description: 'Filter by product type (single, bundle, membership, promotion, accessory)', location: 'query' },
       ],
       responseExample: `{
   "products": [
@@ -145,6 +146,8 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       "_id": "64f123...",
       "name": "Premium Barley Grass Powder",
       "description": "Organic barley grass powder rich in nutrients",
+      "productType": "single",
+      "status": "active",
       "category": "Supplements",
       "brand": "Salveo Organics",
       "images": ["https://example.com/image1.jpg"],
@@ -152,11 +155,16 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
         {
           "name": "250g",
           "price": 29.99,
+          "sku": "SUP-PRE-250-1234",
           "inventory": 50
         }
       ],
       "isActive": true,
       "isFeatured": false,
+      "reviewStats": {
+        "averageRating": 4.5,
+        "totalReviews": 23
+      },
       "createdAt": "2024-01-15T10:30:00Z"
     }
   ],
@@ -182,17 +190,22 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
         { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
         { name: 'name', type: 'string', required: true, description: 'Product name', location: 'body' },
         { name: 'description', type: 'string', required: true, description: 'Product description', location: 'body' },
+        { name: 'productType', type: 'string', required: true, description: 'Product type (single, bundle, membership, promotion, accessory)', location: 'body' },
         { name: 'category', type: 'string', required: true, description: 'Product category', location: 'body' },
         { name: 'brand', type: 'string', required: true, description: 'Product brand', location: 'body' },
         { name: 'images', type: 'string[]', required: true, description: 'Array of image URLs', location: 'body' },
-        { name: 'variants', type: 'object[]', required: true, description: 'Product variants with name, price, inventory', location: 'body' },
+        { name: 'variants', type: 'object[]', required: true, description: 'Product variants with name, price, sku, inventory', location: 'body' },
         { name: 'tags', type: 'string[]', required: false, description: 'Product tags', location: 'body' },
         { name: 'isActive', type: 'boolean', required: false, description: 'Product status (default: true)', location: 'body' },
         { name: 'isFeatured', type: 'boolean', required: false, description: 'Featured status (default: false)', location: 'body' },
+        { name: 'bundleConfig', type: 'object', required: false, description: 'Bundle configuration (only for bundle type)', location: 'body' },
+        { name: 'membershipConfig', type: 'object', required: false, description: 'Membership configuration (only for membership type)', location: 'body' },
+        { name: 'promotionConfig', type: 'object', required: false, description: 'Promotion configuration (only for promotion type)', location: 'body' },
       ],
       requestExample: `{
   "name": "Premium Barley Grass Powder",
   "description": "Organic barley grass powder rich in nutrients",
+  "productType": "single",
   "category": "Supplements",
   "brand": "Salveo Organics",
   "images": ["https://example.com/image1.jpg"],
@@ -200,12 +213,16 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
     {
       "name": "250g",
       "price": 29.99,
-      "inventory": 50
+      "sku": "SUP-PRE-250-1234",
+      "inventory": 50,
+      "isDefault": true
     },
     {
       "name": "500g",
       "price": 49.99,
-      "inventory": 30
+      "sku": "SUP-PRE-500-1235",
+      "inventory": 30,
+      "isDefault": false
     }
   ],
   "tags": ["organic", "superfood", "barley"],
@@ -218,6 +235,8 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
     "_id": "64f123...",
     "name": "Premium Barley Grass Powder",
     "description": "Organic barley grass powder rich in nutrients",
+    "productType": "single",
+    "status": "active",
     "category": "Supplements",
     "brand": "Salveo Organics",
     "images": ["https://example.com/image1.jpg"],
@@ -225,11 +244,17 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       {
         "name": "250g",
         "price": 29.99,
-        "inventory": 50
+        "sku": "SUP-PRE-250-1234",
+        "inventory": 50,
+        "isDefault": true
       }
     ],
     "isActive": true,
     "isFeatured": false,
+    "reviewStats": {
+      "averageRating": 0,
+      "totalReviews": 0
+    },
     "createdAt": "2024-01-15T10:30:00Z"
   }
 }`,
@@ -292,182 +317,481 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       ]
     }
   ],
-  Bundles: [
+  Orders: [
     {
       method: 'GET',
-      path: '/api/bundles',
-      title: 'Get Bundles',
-      description: 'Retrieve paginated list of bundles with populated product details',
-      requiresAuth: false,
+      path: '/api/orders',
+      title: 'Get Orders',
+      description: 'Retrieve paginated list of orders with filtering options',
+      requiresAuth: true,
       parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
         { name: 'page', type: 'number', required: false, description: 'Page number (default: 1)', location: 'query' },
         { name: 'limit', type: 'number', required: false, description: 'Items per page (default: 10)', location: 'query' },
-        { name: 'search', type: 'string', required: false, description: 'Search in bundle names and descriptions', location: 'query' },
-        { name: 'isActive', type: 'boolean', required: false, description: 'Filter by active status', location: 'query' },
+        { name: 'status', type: 'string', required: false, description: 'Filter by order status', location: 'query' },
+        { name: 'customerId', type: 'string', required: false, description: 'Filter by customer ID', location: 'query' },
+        { name: 'startDate', type: 'string', required: false, description: 'Start date filter (ISO format)', location: 'query' },
+        { name: 'endDate', type: 'string', required: false, description: 'End date filter (ISO format)', location: 'query' },
       ],
       responseExample: `{
-  "bundles": [
+  "orders": [
     {
       "_id": "64f456...",
-      "name": "Complete Wellness Bundle",
-      "description": "Everything you need for daily wellness",
-      "images": ["https://example.com/bundle1.jpg"],
+      "orderNumber": "SO-123456ABC",
+      "customerId": "64f789...",
+      "customerEmail": "customer@example.com",
+      "status": "shipped",
+      "paymentStatus": "captured",
       "items": [
         {
-          "productId": {
-            "_id": "64f123...",
-            "name": "Premium Barley Grass Powder",
-            "images": ["https://example.com/image1.jpg"],
-            "category": "Supplements",
-            "brand": "Salveo Organics"
-          },
-          "variantName": "250g",
-          "quantity": 2
+          "productId": "64f123...",
+          "productName": "Premium Barley Grass Powder",
+          "variantSku": "SUP-PRE-250-1234",
+          "quantity": 2,
+          "unitPrice": 29.99,
+          "totalPrice": 59.98
         }
       ],
-      "originalPrice": 79.98,
-      "bundlePrice": 64.98,
-      "discount": 15,
-      "discountType": "fixed",
-      "isActive": true,
-      "inventory": 25,
+      "totals": {
+        "subtotal": 59.98,
+        "taxTotal": 7.20,
+        "shippingTotal": 50.00,
+        "total": 117.18
+      },
+      "shippingInfo": {
+        "method": "standard",
+        "trackingNumber": "TN123456789"
+      },
       "createdAt": "2024-01-15T10:30:00Z"
     }
   ],
   "pagination": {
     "page": 1,
     "limit": 10,
-    "total": 12,
-    "pages": 2
+    "total": 45,
+    "pages": 5
   }
 }`,
       statusCodes: [
-        { code: 200, description: 'Bundles retrieved successfully' },
+        { code: 200, description: 'Orders retrieved successfully' },
+        { code: 401, description: 'Unauthorized' },
         { code: 500, description: 'Internal server error' }
       ]
     },
     {
-      method: 'POST',
-      path: '/api/bundles',
-      title: 'Create Bundle',
-      description: 'Create a new product bundle',
+      method: 'GET',
+      path: '/api/orders/{id}',
+      title: 'Get Order Details',
+      description: 'Retrieve detailed information about a specific order',
       requiresAuth: true,
       parameters: [
         { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
-        { name: 'name', type: 'string', required: true, description: 'Bundle name', location: 'body' },
-        { name: 'description', type: 'string', required: true, description: 'Bundle description', location: 'body' },
-        { name: 'images', type: 'string[]', required: true, description: 'Array of image URLs', location: 'body' },
-        { name: 'items', type: 'object[]', required: true, description: 'Bundle items with productId, variantName, quantity', location: 'body' },
-        { name: 'originalPrice', type: 'number', required: true, description: 'Total original price', location: 'body' },
-        { name: 'discount', type: 'number', required: true, description: 'Discount value', location: 'body' },
-        { name: 'discountType', type: 'string', required: true, description: 'Either "percentage" or "fixed"', location: 'body' },
-        { name: 'inventory', type: 'number', required: false, description: 'Bundle inventory (default: 0)', location: 'body' },
+        { name: 'id', type: 'string', required: true, description: 'Order ID', location: 'query' },
       ],
-      requestExample: `{
-  "name": "Complete Wellness Bundle",
-  "description": "Everything you need for daily wellness",
-  "images": ["https://example.com/bundle1.jpg"],
-  "items": [
-    {
-      "productId": "64f123...",
-      "variantName": "250g",
-      "quantity": 2
-    },
-    {
-      "productId": "64f456...",
-      "variantName": "100ml",
-      "quantity": 1
-    }
-  ],
-  "originalPrice": 79.98,
-  "discount": 15,
-  "discountType": "fixed",
-  "inventory": 25,
-  "isActive": true,
-  "isFeatured": true
-}`,
       responseExample: `{
-  "message": "Bundle created successfully",
-  "bundle": {
-    "_id": "64f789...",
-    "name": "Complete Wellness Bundle",
-    "description": "Everything you need for daily wellness",
-    "images": ["https://example.com/bundle1.jpg"],
+  "order": {
+    "_id": "64f456...",
+    "orderNumber": "SO-123456ABC",
+    "customerId": "64f789...",
+    "customerEmail": "customer@example.com",
+    "status": "shipped",
+    "paymentStatus": "captured",
     "items": [
       {
-        "productId": {
-          "_id": "64f123...",
-          "name": "Premium Barley Grass Powder",
-          "images": ["https://example.com/image1.jpg"]
-        },
-        "variantName": "250g",
-        "quantity": 2
+        "productId": "64f123...",
+        "productName": "Premium Barley Grass Powder",
+        "productType": "single",
+        "variantSku": "SUP-PRE-250-1234",
+        "quantity": 2,
+        "unitPrice": 29.99,
+        "totalPrice": 59.98
       }
     ],
-    "originalPrice": 79.98,
-    "bundlePrice": 64.98,
-    "discount": 15,
-    "discountType": "fixed",
-    "inventory": 25,
-    "isActive": true,
+    "shippingAddress": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "street": "123 Main St",
+      "city": "Manila",
+      "zipCode": "1000",
+      "country": "Philippines"
+    },
+    "totals": {
+      "subtotal": 59.98,
+      "taxTotal": 7.20,
+      "shippingTotal": 50.00,
+      "total": 117.18
+    },
+    "timeline": [
+      {
+        "status": "pending",
+        "timestamp": "2024-01-15T10:30:00Z",
+        "note": "Order created"
+      }
+    ],
     "createdAt": "2024-01-15T10:30:00Z"
   }
 }`,
       statusCodes: [
-        { code: 201, description: 'Bundle created successfully' },
-        { code: 400, description: 'Validation error - missing fields or invalid products/variants' },
+        { code: 200, description: 'Order retrieved successfully' },
         { code: 401, description: 'Unauthorized' },
+        { code: 404, description: 'Order not found' },
         { code: 500, description: 'Internal server error' }
       ]
     },
     {
       method: 'PUT',
-      path: '/api/bundles/{id}',
-      title: 'Update Bundle',
-      description: 'Update an existing bundle',
+      path: '/api/orders/{id}/status',
+      title: 'Update Order Status',
+      description: 'Update the status of an order and add timeline event',
       requiresAuth: true,
       parameters: [
         { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
-        { name: 'id', type: 'string', required: true, description: 'Bundle ID', location: 'query' },
+        { name: 'id', type: 'string', required: true, description: 'Order ID', location: 'query' },
+        { name: 'status', type: 'string', required: true, description: 'New order status', location: 'body' },
+        { name: 'note', type: 'string', required: false, description: 'Optional status update note', location: 'body' },
+        { name: 'trackingNumber', type: 'string', required: false, description: 'Tracking number (for shipped status)', location: 'body' },
       ],
       requestExample: `{
-  "name": "Updated Bundle Name",
-  "isActive": false
+  "status": "shipped",
+  "note": "Order shipped via LBC",
+  "trackingNumber": "TN123456789"
 }`,
       responseExample: `{
-  "message": "Bundle updated successfully",
-  "bundle": {
-    "_id": "64f789...",
-    "name": "Updated Bundle Name",
-    "isActive": false,
+  "message": "Order status updated successfully",
+  "order": {
+    "_id": "64f456...",
+    "orderNumber": "SO-123456ABC",
+    "status": "shipped",
+    "shippingInfo": {
+      "trackingNumber": "TN123456789",
+      "shippedAt": "2024-01-15T10:30:00Z"
+    },
     "updatedAt": "2024-01-15T10:30:00Z"
   }
 }`,
       statusCodes: [
-        { code: 200, description: 'Bundle updated successfully' },
-        { code: 400, description: 'Validation error' },
+        { code: 200, description: 'Order status updated successfully' },
+        { code: 400, description: 'Invalid status or validation error' },
         { code: 401, description: 'Unauthorized' },
-        { code: 404, description: 'Bundle not found' },
+        { code: 404, description: 'Order not found' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    }
+  ],
+  Reviews: [
+    {
+      method: 'GET',
+      path: '/api/reviews',
+      title: 'Get Reviews',
+      description: 'Retrieve paginated list of reviews with filtering options',
+      requiresAuth: false,
+      parameters: [
+        { name: 'page', type: 'number', required: false, description: 'Page number (default: 1)', location: 'query' },
+        { name: 'limit', type: 'number', required: false, description: 'Items per page (default: 10)', location: 'query' },
+        { name: 'productId', type: 'string', required: false, description: 'Filter by product ID', location: 'query' },
+        { name: 'customerId', type: 'string', required: false, description: 'Filter by customer ID', location: 'query' },
+        { name: 'status', type: 'string', required: false, description: 'Filter by review status', location: 'query' },
+        { name: 'rating', type: 'number', required: false, description: 'Filter by rating (1-5)', location: 'query' },
+        { name: 'isVerified', type: 'boolean', required: false, description: 'Filter by verified purchase', location: 'query' },
+      ],
+      responseExample: `{
+  "reviews": [
+    {
+      "_id": "64f456...",
+      "productId": "64f123...",
+      "productName": "Premium Barley Grass Powder",
+      "customerId": "64f789...",
+      "customerName": "John Doe",
+      "rating": 5,
+      "title": "Excellent product!",
+      "content": "This barley grass powder has improved my energy levels significantly.",
+      "status": "approved",
+      "isVerifiedPurchase": true,
+      "analytics": {
+        "helpfulVotes": 12,
+        "viewCount": 156
+      },
+      "createdAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 34,
+    "pages": 4
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Reviews retrieved successfully' },
         { code: 500, description: 'Internal server error' }
       ]
     },
     {
-      method: 'DELETE',
-      path: '/api/bundles/{id}',
-      title: 'Delete Bundle',
-      description: 'Delete a bundle',
+      method: 'POST',
+      path: '/api/reviews',
+      title: 'Create Review',
+      description: 'Create a new product review',
       requiresAuth: true,
       parameters: [
         { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
-        { name: 'id', type: 'string', required: true, description: 'Bundle ID', location: 'query' },
+        { name: 'productId', type: 'string', required: true, description: 'Product ID', location: 'body' },
+        { name: 'orderId', type: 'string', required: false, description: 'Order ID (for verified purchases)', location: 'body' },
+        { name: 'rating', type: 'number', required: true, description: 'Rating (1-5 stars)', location: 'body' },
+        { name: 'title', type: 'string', required: true, description: 'Review title', location: 'body' },
+        { name: 'content', type: 'string', required: true, description: 'Review content', location: 'body' },
+        { name: 'pros', type: 'string[]', required: false, description: 'Product pros', location: 'body' },
+        { name: 'cons', type: 'string[]', required: false, description: 'Product cons', location: 'body' },
+        { name: 'media', type: 'object[]', required: false, description: 'Review media (images/videos)', location: 'body' },
       ],
+      requestExample: `{
+  "productId": "64f123...",
+  "orderId": "64f456...",
+  "rating": 5,
+  "title": "Excellent product!",
+  "content": "This barley grass powder has improved my energy levels significantly. Highly recommend!",
+  "pros": ["Great taste", "Noticeable energy boost"],
+  "cons": ["A bit expensive"],
+  "media": [
+    {
+      "type": "image",
+      "url": "https://example.com/review-image.jpg",
+      "caption": "Product packaging"
+    }
+  ]
+}`,
       responseExample: `{
-  "message": "Bundle deleted successfully"
+  "message": "Review created successfully",
+  "review": {
+    "_id": "64f456...",
+    "productId": "64f123...",
+    "customerId": "64f789...",
+    "rating": 5,
+    "title": "Excellent product!",
+    "content": "This barley grass powder has improved my energy levels significantly.",
+    "status": "pending",
+    "isVerifiedPurchase": true,
+    "createdAt": "2024-01-15T10:30:00Z"
+  }
 }`,
       statusCodes: [
-        { code: 200, description: 'Bundle deleted successfully' },
+        { code: 201, description: 'Review created successfully' },
+        { code: 400, description: 'Validation error or duplicate review' },
         { code: 401, description: 'Unauthorized' },
-        { code: 404, description: 'Bundle not found' },
+        { code: 404, description: 'Product or order not found' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    },
+    {
+      method: 'PUT',
+      path: '/api/reviews/{id}/approve',
+      title: 'Approve Review',
+      description: 'Approve a pending review for public display',
+      requiresAuth: true,
+      parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
+        { name: 'id', type: 'string', required: true, description: 'Review ID', location: 'query' },
+        { name: 'note', type: 'string', required: false, description: 'Moderation note', location: 'body' },
+      ],
+      requestExample: `{
+  "note": "Review approved - meets community guidelines"
+}`,
+      responseExample: `{
+  "message": "Review approved successfully",
+  "review": {
+    "_id": "64f456...",
+    "status": "approved",
+    "moderation": {
+      "moderatedBy": "64f000...",
+      "moderatedAt": "2024-01-15T10:30:00Z",
+      "note": "Review approved - meets community guidelines"
+    }
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Review approved successfully' },
+        { code: 401, description: 'Unauthorized' },
+        { code: 404, description: 'Review not found' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    },
+    {
+      method: 'PUT',
+      path: '/api/reviews/{id}/reject',
+      title: 'Reject Review',
+      description: 'Reject a pending review and prevent public display',
+      requiresAuth: true,
+      parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
+        { name: 'id', type: 'string', required: true, description: 'Review ID', location: 'query' },
+        { name: 'reason', type: 'string', required: true, description: 'Rejection reason', location: 'body' },
+        { name: 'note', type: 'string', required: false, description: 'Additional moderation note', location: 'body' },
+      ],
+      requestExample: `{
+  "reason": "Inappropriate content",
+  "note": "Review contains offensive language"
+}`,
+      responseExample: `{
+  "message": "Review rejected successfully",
+  "review": {
+    "_id": "64f456...",
+    "status": "rejected",
+    "moderation": {
+      "moderatedBy": "64f000...",
+      "moderatedAt": "2024-01-15T10:30:00Z",
+      "reason": "Inappropriate content"
+    }
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Review rejected successfully' },
+        { code: 401, description: 'Unauthorized' },
+        { code: 404, description: 'Review not found' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    }
+  ],
+  Members: [
+    {
+      method: 'GET',
+      path: '/api/members',
+      title: 'Get Members',
+      description: 'Retrieve paginated list of members with filtering options',
+      requiresAuth: true,
+      parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
+        { name: 'page', type: 'number', required: false, description: 'Page number (default: 1)', location: 'query' },
+        { name: 'limit', type: 'number', required: false, description: 'Items per page (default: 10)', location: 'query' },
+        { name: 'search', type: 'string', required: false, description: 'Search by name or email', location: 'query' },
+        { name: 'membershipTier', type: 'string', required: false, description: 'Filter by membership tier', location: 'query' },
+        { name: 'isActive', type: 'boolean', required: false, description: 'Filter by active status', location: 'query' },
+        { name: 'sortBy', type: 'string', required: false, description: 'Sort by field (totalSpent, totalOrders, joinDate)', location: 'query' },
+      ],
+      responseExample: `{
+  "members": [
+    {
+      "_id": "64f789...",
+      "email": "john.doe@example.com",
+      "name": "John Doe",
+      "phone": "+63912345678",
+      "membershipTier": "premium",
+      "membershipStatus": "active",
+      "isActive": true,
+      "isEmailVerified": true,
+      "stats": {
+        "totalOrders": 15,
+        "totalSpent": 12500.50,
+        "averageOrderValue": 833.37,
+        "loyaltyPoints": 1250
+      },
+      "joinDate": "2024-01-01T00:00:00Z",
+      "lastActiveAt": "2024-01-15T10:30:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 156,
+    "pages": 16
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Members retrieved successfully' },
+        { code: 401, description: 'Unauthorized' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    },
+    {
+      method: 'GET',
+      path: '/api/members/{id}',
+      title: 'Get Member Details',
+      description: 'Retrieve detailed information about a specific member',
+      requiresAuth: true,
+      parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
+        { name: 'id', type: 'string', required: true, description: 'Member ID', location: 'query' },
+      ],
+      responseExample: `{
+  "member": {
+    "_id": "64f789...",
+    "email": "john.doe@example.com",
+    "name": "John Doe",
+    "firstName": "John",
+    "lastName": "Doe",
+    "phone": "+63912345678",
+    "membershipTier": "premium",
+    "membershipStatus": "active",
+    "addresses": [
+      {
+        "type": "shipping",
+        "firstName": "John",
+        "lastName": "Doe",
+        "street": "123 Main St",
+        "city": "Manila",
+        "zipCode": "1000",
+        "country": "Philippines",
+        "isDefault": true
+      }
+    ],
+    "preferences": {
+      "categories": ["Supplements", "Skincare"],
+      "notifications": {
+        "email": true,
+        "promotions": true
+      }
+    },
+    "stats": {
+      "totalOrders": 15,
+      "totalSpent": 12500.50,
+      "averageOrderValue": 833.37,
+      "loyaltyPoints": 1250,
+      "lastOrderDate": "2024-01-10T00:00:00Z"
+    },
+    "activity": {
+      "loginCount": 45,
+      "pageViews": 234
+    },
+    "createdAt": "2024-01-01T00:00:00Z"
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Member retrieved successfully' },
+        { code: 401, description: 'Unauthorized' },
+        { code: 404, description: 'Member not found' },
+        { code: 500, description: 'Internal server error' }
+      ]
+    },
+    {
+      method: 'PUT',
+      path: '/api/members/{id}',
+      title: 'Update Member',
+      description: 'Update member information and settings',
+      requiresAuth: true,
+      parameters: [
+        { name: 'Authorization', type: 'string', required: true, description: 'Bearer {token}', location: 'header' },
+        { name: 'id', type: 'string', required: true, description: 'Member ID', location: 'query' },
+        { name: 'membershipTier', type: 'string', required: false, description: 'Update membership tier', location: 'body' },
+        { name: 'isActive', type: 'boolean', required: false, description: 'Update active status', location: 'body' },
+        { name: 'membershipStatus', type: 'string', required: false, description: 'Update membership status', location: 'body' },
+      ],
+      requestExample: `{
+  "membershipTier": "vip",
+  "isActive": true,
+  "membershipStatus": "active"
+}`,
+      responseExample: `{
+  "message": "Member updated successfully",
+  "member": {
+    "_id": "64f789...",
+    "membershipTier": "vip",
+    "isActive": true,
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}`,
+      statusCodes: [
+        { code: 200, description: 'Member updated successfully' },
+        { code: 400, description: 'Validation error' },
+        { code: 401, description: 'Unauthorized' },
+        { code: 404, description: 'Member not found' },
         { code: 500, description: 'Internal server error' }
       ]
     }
@@ -520,64 +844,66 @@ export default function ApiDocumentation() {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-emerald-900 mb-2">API Documentation</h1>
-        <p className="text-emerald-700 mb-4">
+    <div className="p-8 max-w-7xl mx-auto">
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold text-brand-900 font-display mb-3">API Documentation</h1>
+        <p className="text-lg text-brand-600 mb-6">
           Complete documentation for the SLV Barley Shop Admin API endpoints
         </p>
         
-        <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-          <div className="flex items-start space-x-3">
-            <Code2 className="text-indigo-600 mt-0.5" size={20} />
+        <div className="bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-2xl p-6">
+          <div className="flex items-start space-x-4">
+            <Code2 className="text-primary-600 mt-1" size={24} />
             <div>
-              <h3 className="font-medium text-indigo-800">Base URL</h3>
-              <p className="text-indigo-700 font-mono text-sm">{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}</p>
+              <h3 className="font-bold text-primary-900 text-lg">Base URL</h3>
+              <p className="text-primary-800 font-mono text-base mt-1">{typeof window !== 'undefined' ? window.location.origin : 'https://your-domain.com'}</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Authentication Info */}
-      <div className="bg-white rounded-xl shadow-lg border border-emerald-100 p-6 mb-6">
-        <div className="flex items-center space-x-3 mb-4">
-          <Lock className="text-emerald-600" size={24} />
-          <h2 className="text-xl font-semibold text-emerald-900">Authentication</h2>
+      <div className="card-premium rounded-2xl p-8 mb-8">
+        <div className="flex items-center space-x-4 mb-6">
+          <div className="p-3 bg-gradient-to-r from-secondary-600 to-secondary-700 rounded-xl text-white">
+            <Lock size={24} />
+          </div>
+          <h2 className="text-2xl font-semibold text-brand-900 font-display">Authentication</h2>
         </div>
-        <p className="text-gray-700 mb-4">
-          Endpoints marked with <Lock className="inline w-4 h-4 text-red-500" /> require authentication. 
+        <p className="text-brand-700 mb-6 text-lg">
+          Endpoints marked with <Lock className="inline w-5 h-5 text-danger-500" /> require authentication. 
           Include the JWT token in the Authorization header:
         </p>
-        <div className="bg-gray-50 rounded-lg p-4">
-          <code className="text-sm font-mono text-gray-800">
+        <div className="bg-gradient-to-r from-neutral-50 to-neutral-100 rounded-xl p-6 border border-neutral-200">
+          <code className="text-base font-mono text-brand-800 break-all">
             Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
           </code>
         </div>
       </div>
 
       {/* API Endpoints */}
-      <div className="space-y-6">
+      <div className="space-y-8">
         {Object.entries(API_ENDPOINTS).map(([section, endpoints]) => (
-          <div key={section} className="bg-white rounded-xl shadow-lg border border-emerald-100">
+          <div key={section} className="card-premium rounded-2xl shadow-premium-lg">
             <button
               onClick={() => toggleSection(section)}
-              className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-emerald-50 transition-colors rounded-t-xl"
+              className="w-full px-8 py-6 flex items-center justify-between text-left hover:bg-primary-50/50 transition-colors rounded-t-2xl"
             >
-              <h2 className="text-xl font-semibold text-emerald-900">{section}</h2>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-emerald-600 bg-emerald-100 px-2 py-1 rounded-full">
+              <h2 className="text-2xl font-semibold text-brand-900 font-display">{section}</h2>
+              <div className="flex items-center space-x-3">
+                <span className="text-sm font-semibold text-primary-700 bg-primary-100 px-3 py-1 rounded-xl border border-primary-200">
                   {endpoints.length} endpoint{endpoints.length !== 1 ? 's' : ''}
                 </span>
                 {expandedSections.has(section) ? (
-                  <ChevronDown className="text-emerald-600" size={20} />
+                  <ChevronDown className="text-primary-600" size={24} />
                 ) : (
-                  <ChevronRight className="text-emerald-600" size={20} />
+                  <ChevronRight className="text-primary-600" size={24} />
                 )}
               </div>
             </button>
 
             {expandedSections.has(section) && (
-              <div className="border-t border-emerald-100">
+              <div className="border-t border-neutral-200">
                 {endpoints.map((endpoint, index) => {
                   const endpointId = `${section}-${index}`;
                   const isExpanded = expandedEndpoints.has(endpointId);
