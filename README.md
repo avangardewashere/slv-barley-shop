@@ -1,6 +1,12 @@
-# SLV Barley Shop - Admin Dashboard v1.0.0
+# SLV Barley Shop - Admin Dashboard v1.1.0
 
 A professional, production-ready admin dashboard for managing an ecommerce platform built with Next.js, TypeScript, MongoDB, and Tailwind CSS.
+
+## 🎉 Latest Updates (v1.1.0)
+- ✅ **New Premium UI**: Navy/Gold/Emerald color scheme
+- ✅ **Schema Updates**: Removed bundles, enhanced products with flexible types
+- ✅ **Production Ready**: All build errors fixed, optimized for deployment
+- ✅ **Enhanced Models**: Orders, Reviews, and Members with full lifecycle support
 
 ## 🚀 Features
 

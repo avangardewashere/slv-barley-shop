@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { applyRateLimit } from './rate-limit';
-import { applyCSRFProtection } from './csrf';
-import { applySanitization } from './sanitization';
-import { applyCompression } from './compression';
-import { applyCachingHeaders } from '@/lib/cache';
+import { createRateLimiter } from './rate-limit';
+import { createDoubleSubmitCSRF } from './csrf';
+import { createSanitizationMiddleware } from './sanitization';
+import { createCompressionMiddleware } from './compression';
+import { applyCachingHeaders } from './caching';
 import { logSecurityEvent, logHttpRequest } from '@/lib/logger';
 
 export interface SecurityConfig {
@@ -60,30 +60,36 @@ export const createSecurityMiddleware = (config: SecurityConfig = {}) => {
     logging = true,
   } = config;
 
+  // Create middleware instances
+  const rateLimiter = rateLimiting ? createRateLimiter() : null;
+  const csrfProtection = csrf ? createDoubleSubmitCSRF() : null;
+  const sanitizer = sanitization ? createSanitizationMiddleware() : null;
+  const compressor = compression ? createCompressionMiddleware() : null;
+
   return async (request: NextRequest): Promise<NextResponse> => {
     const startTime = Date.now();
     let response: NextResponse;
 
     try {
       // Apply rate limiting
-      if (rateLimiting) {
-        const rateLimitResult = await applyRateLimit(request);
+      if (rateLimiter) {
+        const rateLimitResult = await rateLimiter(request);
         if (rateLimitResult) {
           return rateLimitResult;
         }
       }
 
       // Apply input sanitization
-      if (sanitization) {
-        const sanitizationResult = await applySanitization(request);
+      if (sanitizer) {
+        const sanitizationResult = await sanitizer(request);
         if (sanitizationResult) {
           return sanitizationResult;
         }
       }
 
       // Apply CSRF protection
-      if (csrf) {
-        const csrfResult = await applyCSRFProtection(request);
+      if (csrfProtection) {
+        const csrfResult = await csrfProtection(request);
         if (csrfResult) {
           return csrfResult;
         }
@@ -93,8 +99,8 @@ export const createSecurityMiddleware = (config: SecurityConfig = {}) => {
       response = NextResponse.next();
 
       // Apply compression
-      if (compression) {
-        response = await applyCompression(request, response);
+      if (compressor) {
+        response = await compressor(request, response);
       }
 
       // Apply caching headers

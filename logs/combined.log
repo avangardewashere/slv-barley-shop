@@ -72,3 +72,10 @@
   "email": "avelpanaligan@gmail.com",
   "ip": "::1"
 }
+2025-08-11 09:36:08:368 [info]: AUDIT: user_login {
+  "userId": "689302eb08774cc0d54e2e42",
+  "resourceType": "admin",
+  "resourceId": "689302eb08774cc0d54e2e42",
+  "email": "avelpanaligan@gmail.com",
+  "ip": "::1"
+}
