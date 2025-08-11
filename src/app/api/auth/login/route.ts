@@ -6,25 +6,35 @@ import { generateTokenPair, setAuthCookies } from '@/lib/auth-cookies';
 import { VERSION_INFO } from '@/lib/version';
 import { authRateLimiter } from '@/middleware/rate-limit';
 import { validateLoginData } from '@/middleware/validation';
-import { createSanitizationMiddleware } from '@/middleware/sanitization';
 import { logSecurityEvent, logAudit } from '@/lib/logger';
-import { validatePassword } from '@/lib/password-validator';
+
+// Handle preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
-    // Apply rate limiting
-    const rateLimitResult = await authRateLimiter(request);
-    if (rateLimitResult) {
-      return rateLimitResult;
-    }
+    // Parse request body
+    const body = await request.json();
+    const { email, password } = body;
 
-    // Validate and sanitize input
-    const validationResult = await validateLoginData(request);
-    if (!validationResult.isValid) {
-      return validationResult.response!;
+    // Basic validation
+    if (!email || !password) {
+      const errorResponse = NextResponse.json(
+        { error: 'Email and password are required' },
+        { status: 400 }
+      );
+      errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+      return errorResponse;
     }
-
-    const { email, password } = validationResult.data!;
 
     await connectDB();
 
@@ -36,10 +46,12 @@ export async function POST(request: NextRequest) {
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       });
 
-      return NextResponse.json(
+      const errorResponse = NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
+      errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+      return errorResponse;
     }
 
     const isPasswordValid = await comparePassword(password, admin.password);
@@ -50,10 +62,12 @@ export async function POST(request: NextRequest) {
         ip: request.headers.get('x-forwarded-for') || 'unknown',
       });
 
-      return NextResponse.json(
+      const errorResponse = NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
       );
+      errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+      return errorResponse;
     }
 
     // Generate token pair with CSRF token
@@ -88,6 +102,11 @@ export async function POST(request: NextRequest) {
       api: VERSION_INFO,
     });
 
+    // Add CORS headers
+    response.headers.set('Access-Control-Allow-Origin', '*');
+    response.headers.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
     // Set httpOnly cookies
     return setAuthCookies(response, tokens);
   } catch (error) {
@@ -96,9 +115,11 @@ export async function POST(request: NextRequest) {
       ip: request.headers.get('x-forwarded-for') || 'unknown',
     });
 
-    return NextResponse.json(
+    const errorResponse = NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
+    errorResponse.headers.set('Access-Control-Allow-Origin', '*');
+    return errorResponse;
   }
 }

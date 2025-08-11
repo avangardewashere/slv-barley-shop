@@ -19,8 +19,8 @@
     "version:major": "npm version major",
     "deploy:vercel": "vercel --prod",
     "deploy:preview": "vercel",
-    "postinstall": "node scripts/postinstall.js || true",
-    "prebuild": "node scripts/prebuild.js || true"
+    "postinstall": "echo 'Setup complete'",
+    "clean": "rm -rf .next out"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
