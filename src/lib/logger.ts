@@ -2,10 +2,19 @@ import winston from 'winston';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure log directory exists
+// Only create log directory in non-serverless environments
+const isServerless = process.env.VERCEL || process.env.NETLIFY || process.env.AWS_LAMBDA_FUNCTION_NAME;
 const logDir = process.env.LOG_DIR || 'logs';
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
+
+// Only try to create directory if not in serverless environment
+if (!isServerless && typeof window === 'undefined') {
+  try {
+    if (!fs.existsSync(logDir)) {
+      fs.mkdirSync(logDir, { recursive: true });
+    }
+  } catch (error) {
+    console.warn('Could not create log directory:', error);
+  }
 }
 
 // Define log levels
@@ -43,28 +52,34 @@ const format = winston.format.combine(
 );
 
 // Define which transports the logger must use
-const transports = [
-  // Console transport
+const transports: winston.transport[] = [
+  // Console transport (always use this)
   new winston.transports.Console({
     format: winston.format.combine(
       winston.format.colorize({ all: true }),
       winston.format.simple()
     ),
   }),
-  // Error log file
-  new winston.transports.File({
-    filename: path.join(logDir, 'error.log'),
-    level: 'error',
-    maxsize: 5242880, // 5MB
-    maxFiles: 5,
-  }),
-  // Combined log file
-  new winston.transports.File({
-    filename: path.join(logDir, 'combined.log'),
-    maxsize: 5242880, // 5MB
-    maxFiles: 5,
-  }),
 ];
+
+// Only add file transports in non-serverless environments
+if (!isServerless) {
+  transports.push(
+    // Error log file
+    new winston.transports.File({
+      filename: path.join(logDir, 'error.log'),
+      level: 'error',
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    }),
+    // Combined log file
+    new winston.transports.File({
+      filename: path.join(logDir, 'combined.log'),
+      maxsize: 5242880, // 5MB
+      maxFiles: 5,
+    })
+  );
+}
 
 // Create the logger
 const logger = winston.createLogger({
