@@ -21,12 +21,6 @@ export const GET = async (request: NextRequest, { params }: RouteParams) => {
     
     let query = Product.findById(id);
     
-    // Populate bundle items if it's a bundle product
-    query = query.populate({
-      path: 'bundleConfig.items.productId',
-      select: 'name images variants category brand'
-    });
-    
     // Populate related products if requested
     if (includeRelated) {
       query = query
@@ -82,6 +76,43 @@ export const PUT = async (request: NextRequest, { params }: RouteParams) => {
 
     const body = await request.json();
     
+    // Parse stringified fields if they exist
+    if (typeof body.images === 'string') {
+      try {
+        body.images = JSON.parse(body.images);
+      } catch (error) {
+        console.error('Failed to parse images field:', error);
+        return NextResponse.json(
+          { error: 'Invalid images format' },
+          { status: 400 }
+        );
+      }
+    }
+    
+    if (typeof body.variants === 'string') {
+      try {
+        body.variants = JSON.parse(body.variants);
+      } catch (error) {
+        console.error('Failed to parse variants field:', error);
+        return NextResponse.json(
+          { error: 'Invalid variants format' },
+          { status: 400 }
+        );
+      }
+    }
+    
+    if (typeof body.tags === 'string') {
+      try {
+        body.tags = JSON.parse(body.tags);
+      } catch (error) {
+        console.error('Failed to parse tags field:', error);
+        return NextResponse.json(
+          { error: 'Invalid tags format' },
+          { status: 400 }
+        );
+      }
+    }
+    
     // Validate product data if productType is being changed
     if (body.productType) {
       const validationErrors = ProductUtils.validateProductData(body);
@@ -106,10 +137,7 @@ export const PUT = async (request: NextRequest, { params }: RouteParams) => {
       id,
       body,
       { new: true, runValidators: true }
-    ).populate({
-      path: 'bundleConfig.items.productId',
-      select: 'name images variants category brand'
-    });
+    );
 
     if (!product) {
       return NextResponse.json(
