@@ -61,9 +61,9 @@ export async function POST(request: NextRequest) {
     // Log audit
     logAudit(
       'image_upload',
-      admin._id.toString(),
+      admin.adminId,
       'admin',
-      admin._id.toString(),
+      admin.adminId,
       undefined,
       {
         publicId: uploadResult.public_id,
@@ -129,9 +129,9 @@ export async function PUT(request: NextRequest) {
     // Log audit
     logAudit(
       'image_upload_from_url',
-      admin._id.toString(),
+      admin.adminId,
       'admin',
-      admin._id.toString(),
+      admin.adminId,
       undefined,
       {
         sourceUrl: imageUrl,
