@@ -13,8 +13,8 @@ export async function POST(request: NextRequest) {
       return rateLimitResult;
     }
 
-    // Authenticate admin
-    const authResult = await authenticateAdmin(request);
+    // Authenticate admin (disable CSRF check)
+    const authResult = await authenticateAdmin(request, false);
     if (!authResult.isAuthenticated) {
       return authResult.response!;
     }
@@ -101,8 +101,8 @@ export async function PUT(request: NextRequest) {
       return rateLimitResult;
     }
 
-    // Authenticate admin
-    const authResult = await authenticateAdmin(request);
+    // Authenticate admin (disable CSRF check)
+    const authResult = await authenticateAdmin(request, false);
     if (!authResult.isAuthenticated) {
       return authResult.response!;
     }

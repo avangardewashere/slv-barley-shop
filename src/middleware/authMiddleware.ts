@@ -23,8 +23,13 @@ export const authenticateAdmin = async (request: NextRequest, requireCSRF: boole
     token = accessToken;
     admin = verifyAccessToken(token);
     
+    // Get URL pathname for CSRF exemptions
+    const pathname = new URL(request.url).pathname;
+    const csrfExemptRoutes = ['/api/upload', '/api/products'];
+    const isExemptRoute = csrfExemptRoutes.some(route => pathname.startsWith(route));
+    
     // Verify CSRF token for state-changing operations
-    if (admin && requireCSRF && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    if (admin && requireCSRF && !isExemptRoute && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
       if (!verifyCSRFToken(request)) {
         logSecurityEvent('CSRF token validation failed', 'high', {
           url: request.url,
@@ -93,8 +98,13 @@ export const authenticateAdminSync = (request: NextRequest, requireCSRF: boolean
     token = accessToken;
     admin = verifyAccessToken(token);
     
+    // Get URL pathname for CSRF exemptions
+    const pathname = new URL(request.url).pathname;
+    const csrfExemptRoutes = ['/api/upload', '/api/products'];
+    const isExemptRoute = csrfExemptRoutes.some(route => pathname.startsWith(route));
+    
     // Verify CSRF token for state-changing operations
-    if (admin && requireCSRF && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
+    if (admin && requireCSRF && !isExemptRoute && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
       if (!verifyCSRFToken(request)) {
         logSecurityEvent('CSRF token validation failed', 'high', {
           url: request.url,

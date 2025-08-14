@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Product, { ProductType, ProductStatus, ProductUtils } from '@/models/Product';
 import Review from '@/models/Review';
-import { requireAuth } from '@/middleware/authMiddleware';
+import { authenticateAdmin } from '@/middleware/auth';
 import { transformProductImages } from '@/lib/cloudinary';
 import { VERSION_INFO } from '@/lib/version';
 
@@ -99,7 +99,11 @@ export const GET = async (request: NextRequest) => {
   }
 };
 
-export const POST = requireAuth(async (request) => {
+export const POST = async (request: NextRequest) => {
+  const authResult = await authenticateAdmin(request, false); // Disable CSRF check
+  if (!authResult.isAuthenticated) {
+    return authResult.response!;
+  }
   try {
     await connectDB();
 
@@ -180,4 +184,4 @@ export const POST = requireAuth(async (request) => {
       { status: 500 }
     );
   }
-});
+};
