@@ -42,7 +42,15 @@ export const GET = async (request: NextRequest) => {
       if (maxPrice) filter['basePriceRange.max'] = { $lte: parseFloat(maxPrice) };
     }
     if (search) {
-      filter.$text = { $search: search };
+      // Use regex for partial matching instead of full-text search
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { shortDescription: { $regex: search, $options: 'i' } },
+        { category: { $regex: search, $options: 'i' } },
+        { brand: { $regex: search, $options: 'i' } },
+        { tags: { $in: [new RegExp(search, 'i')] } }
+      ];
     }
 
     // Build sort object

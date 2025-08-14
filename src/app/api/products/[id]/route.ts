@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Product, { ProductUtils } from '@/models/Product';
 import Review from '@/models/Review';
-import { requireAuth } from '@/middleware/authMiddleware';
+import { authenticateAdmin } from '@/middleware/auth';
 
 interface RouteParams {
   params: Promise<{
@@ -71,7 +71,11 @@ export const GET = async (request: NextRequest, { params }: RouteParams) => {
   }
 };
 
-export const PUT = requireAuth(async (request, { params }: RouteParams) => {
+export const PUT = async (request: NextRequest, { params }: RouteParams) => {
+  const authResult = await authenticateAdmin(request, false); // Disable CSRF check
+  if (!authResult.isAuthenticated) {
+    return authResult.response!;
+  }
   try {
     await connectDB();
     const { id } = await params;
@@ -134,9 +138,13 @@ export const PUT = requireAuth(async (request, { params }: RouteParams) => {
       { status: 500 }
     );
   }
-});
+};
 
-export const DELETE = requireAuth(async (request, { params }: RouteParams) => {
+export const DELETE = async (request: NextRequest, { params }: RouteParams) => {
+  const authResult = await authenticateAdmin(request, false); // Disable CSRF check
+  if (!authResult.isAuthenticated) {
+    return authResult.response!;
+  }
   try {
     await connectDB();
     const { id } = await params;
@@ -159,4 +167,4 @@ export const DELETE = requireAuth(async (request, { params }: RouteParams) => {
       { status: 500 }
     );
   }
-});
+};
