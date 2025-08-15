@@ -150,7 +150,31 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
       "status": "active",
       "category": "Supplements",
       "brand": "Salveo Organics",
-      "images": ["https://example.com/image1.jpg"],
+      "images": [
+        {
+          "url": "https://res.cloudinary.com/example/image/upload/v1234567890/products/product1.webp",
+          "publicId": "products/product1",
+          "alt": "Premium Supplement main image",
+          "isPrimary": true,
+          "width": 600,
+          "height": 600,
+          "format": "webp",
+          "size": 35244,
+          "optimizedUrls": {
+            "thumbnail": "https://res.cloudinary.com/example/image/upload/c_fill,w_150,h_150,q_auto,f_auto/products/product1",
+            "small": "https://res.cloudinary.com/example/image/upload/c_fill,w_300,h_300,q_auto,f_auto/products/product1",
+            "medium": "https://res.cloudinary.com/example/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/product1",
+            "large": "https://res.cloudinary.com/example/image/upload/c_fill,w_1200,h_1200,q_auto,f_auto/products/product1",
+            "original": "https://res.cloudinary.com/example/image/upload/q_auto,f_auto/products/product1"
+          },
+          "responsiveUrls": {
+            "card": "https://res.cloudinary.com/example/image/upload/c_fill,w_400,h_400,q_auto,f_auto/products/product1",
+            "detail": "https://res.cloudinary.com/example/image/upload/c_fill,w_800,h_800,q_auto,f_auto/products/product1",
+            "hero": "https://res.cloudinary.com/example/image/upload/c_fill,w_1920,h_800,q_auto,f_auto/products/product1",
+            "mobile": "https://res.cloudinary.com/example/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/product1"
+          }
+        }
+      ],
       "variants": [
         {
           "name": "250g",
@@ -193,7 +217,7 @@ const API_ENDPOINTS: Record<string, ApiEndpoint[]> = {
         { name: 'productType', type: 'string', required: true, description: 'Product type (single, bundle, membership, promotion, accessory)', location: 'body' },
         { name: 'category', type: 'string', required: true, description: 'Product category', location: 'body' },
         { name: 'brand', type: 'string', required: true, description: 'Product brand', location: 'body' },
-        { name: 'images', type: 'string[]', required: true, description: 'Array of image URLs', location: 'body' },
+        { name: 'images', type: 'IProductImage[]', required: true, description: 'Array of product image objects with Cloudinary metadata', location: 'body' },
         { name: 'variants', type: 'object[]', required: true, description: 'Product variants with name, price, sku, inventory', location: 'body' },
         { name: 'tags', type: 'string[]', required: false, description: 'Product tags', location: 'body' },
         { name: 'isActive', type: 'boolean', required: false, description: 'Product status (default: true)', location: 'body' },

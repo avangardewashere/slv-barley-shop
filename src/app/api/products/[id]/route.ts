@@ -80,6 +80,22 @@ export const PUT = async (request: NextRequest, { params }: RouteParams) => {
     if (typeof body.images === 'string') {
       try {
         body.images = JSON.parse(body.images);
+        // Validate that parsed images is an array
+        if (!Array.isArray(body.images)) {
+          return NextResponse.json(
+            { error: 'Images must be an array' },
+            { status: 400 }
+          );
+        }
+        // Validate each image object structure
+        for (const image of body.images) {
+          if (typeof image !== 'object' || !image.url || !image.publicId || !image.alt) {
+            return NextResponse.json(
+              { error: 'Invalid image object structure' },
+              { status: 400 }
+            );
+          }
+        }
       } catch (error) {
         console.error('Failed to parse images field:', error);
         return NextResponse.json(

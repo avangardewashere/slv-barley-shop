@@ -20,6 +20,12 @@ interface UploadedImage {
     large: string;
     original: string;
   };
+  responsiveUrls: {
+    card: string;
+    detail: string;
+    hero: string;
+    mobile: string;
+  };
 }
 
 interface ImageUploadProps {

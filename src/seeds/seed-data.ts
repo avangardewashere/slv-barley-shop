@@ -21,9 +21,52 @@ export const sampleProducts = [
     brand: 'Salveo Organics',
     manufacturer: 'Salveo Manufacturing Inc.',
     images: [
-      '/images/products/barley-grass-powder-main.jpg',
-      '/images/products/barley-grass-powder-2.jpg',
-      '/images/products/barley-grass-powder-3.jpg'
+      {
+        url: 'https://res.cloudinary.com/dde9vuwri/image/upload/v1755159513/products/barley-grass-powder-main.webp',
+        publicId: 'products/barley-grass-powder-main',
+        alt: 'Premium Barley Grass Powder main product image',
+        isPrimary: true,
+        width: 600,
+        height: 600,
+        format: 'webp',
+        size: 45200,
+        optimizedUrls: {
+          thumbnail: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_150,h_150,q_auto,f_auto/products/barley-grass-powder-main',
+          small: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_300,h_300,q_auto,f_auto/products/barley-grass-powder-main',
+          medium: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/barley-grass-powder-main',
+          large: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_1200,h_1200,q_auto,f_auto/products/barley-grass-powder-main',
+          original: 'https://res.cloudinary.com/dde9vuwri/image/upload/q_auto,f_auto/products/barley-grass-powder-main'
+        },
+        responsiveUrls: {
+          card: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_400,h_400,q_auto,f_auto/products/barley-grass-powder-main',
+          detail: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_800,h_800,q_auto,f_auto/products/barley-grass-powder-main',
+          hero: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_1920,h_800,q_auto,f_auto/products/barley-grass-powder-main',
+          mobile: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/barley-grass-powder-main'
+        }
+      },
+      {
+        url: 'https://res.cloudinary.com/dde9vuwri/image/upload/v1755159513/products/barley-grass-powder-2.webp',
+        publicId: 'products/barley-grass-powder-2',
+        alt: 'Premium Barley Grass Powder packaging view',
+        isPrimary: false,
+        width: 600,
+        height: 600,
+        format: 'webp',
+        size: 42800,
+        optimizedUrls: {
+          thumbnail: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_150,h_150,q_auto,f_auto/products/barley-grass-powder-2',
+          small: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_300,h_300,q_auto,f_auto/products/barley-grass-powder-2',
+          medium: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/barley-grass-powder-2',
+          large: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_1200,h_1200,q_auto,f_auto/products/barley-grass-powder-2',
+          original: 'https://res.cloudinary.com/dde9vuwri/image/upload/q_auto,f_auto/products/barley-grass-powder-2'
+        },
+        responsiveUrls: {
+          card: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_400,h_400,q_auto,f_auto/products/barley-grass-powder-2',
+          detail: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_800,h_800,q_auto,f_auto/products/barley-grass-powder-2',
+          hero: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_1920,h_800,q_auto,f_auto/products/barley-grass-powder-2',
+          mobile: 'https://res.cloudinary.com/dde9vuwri/image/upload/c_fill,w_600,h_600,q_auto,f_auto/products/barley-grass-powder-2'
+        }
+      }
     ],
     variants: [
       {

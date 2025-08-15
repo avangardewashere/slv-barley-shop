@@ -96,6 +96,31 @@ export interface IReviewStats {
   lastUpdated: Date;
 }
 
+// Product Image Interface
+export interface IProductImage {
+  url: string;
+  publicId: string;
+  alt: string;
+  isPrimary: boolean;
+  width: number;
+  height: number;
+  format: string;
+  size: number;
+  optimizedUrls: {
+    thumbnail: string;
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+  responsiveUrls: {
+    card: string;
+    detail: string;
+    hero: string;
+    mobile: string;
+  };
+}
+
 // Enhanced Product Interface
 export interface IProduct extends Document {
   name: string;
@@ -107,7 +132,7 @@ export interface IProduct extends Document {
   subcategory?: string;
   brand: string;
   manufacturer?: string;
-  images: string[];
+  images: IProductImage[];
   variants: IProductVariant[];
   tags: string[];
   isActive: boolean;
@@ -258,8 +283,51 @@ const ProductSchema: Schema = new Schema({
     default: 'Salveo Organics',
   },
   images: [{
-    type: String,
-    required: [true, 'At least one image is required'],
+    url: {
+      type: String,
+      required: [true, 'Image URL is required'],
+    },
+    publicId: {
+      type: String,
+      required: [true, 'Public ID is required'],
+    },
+    alt: {
+      type: String,
+      required: [true, 'Alt text is required'],
+    },
+    isPrimary: {
+      type: Boolean,
+      default: false,
+    },
+    width: {
+      type: Number,
+      required: [true, 'Width is required'],
+    },
+    height: {
+      type: Number,
+      required: [true, 'Height is required'],
+    },
+    format: {
+      type: String,
+      required: [true, 'Format is required'],
+    },
+    size: {
+      type: Number,
+      required: [true, 'Size is required'],
+    },
+    optimizedUrls: {
+      thumbnail: String,
+      small: String,
+      medium: String,
+      large: String,
+      original: String,
+    },
+    responsiveUrls: {
+      card: String,
+      detail: String,
+      hero: String,
+      mobile: String,
+    },
   }],
   variants: {
     type: [ProductVariantSchema],

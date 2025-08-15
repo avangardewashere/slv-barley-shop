@@ -4,10 +4,34 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Search, Edit, Trash2, Eye, EyeOff, Package } from 'lucide-react';
 
+interface ProductImage {
+  url: string;
+  publicId: string;
+  alt: string;
+  isPrimary: boolean;
+  width: number;
+  height: number;
+  format: string;
+  size: number;
+  optimizedUrls: {
+    thumbnail: string;
+    small: string;
+    medium: string;
+    large: string;
+    original: string;
+  };
+  responsiveUrls: {
+    card: string;
+    detail: string;
+    hero: string;
+    mobile: string;
+  };
+}
+
 interface Product {
   _id: string;
   name: string;
-  images: string[];
+  images: ProductImage[];
   category: string;
   brand: string;
   variants: Array<{
@@ -21,12 +45,12 @@ interface Bundle {
   _id: string;
   name: string;
   description: string;
-  images: string[];
+  images: ProductImage[];
   items: Array<{
     productId: {
       _id: string;
       name: string;
-      images: string[];
+      images: ProductImage[];
       category: string;
       brand: string;
     };
@@ -216,7 +240,7 @@ export default function BundleManagement() {
                       <div className="h-16 w-16 flex-shrink-0">
                         <img
                           className="h-16 w-16 rounded-2xl object-cover shadow-lg ring-2 ring-white"
-                          src={bundle.images[0] || '/placeholder-image.jpg'}
+                          src={bundle.images[0]?.optimizedUrls?.thumbnail || bundle.images[0]?.url || '/placeholder-image.jpg'}
                           alt={bundle.name}
                         />
                       </div>
